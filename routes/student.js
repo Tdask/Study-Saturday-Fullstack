@@ -17,12 +17,38 @@ router.get('/', function(req, res, next) {
   );
 });
 
+router.post('/', function(req, res, next) {
+  try {
+    Student.create(req.body)
+      .then(studentNoTest => {
+        return Promise.all([
+          Test.create({
+            subject: 'Programming',
+            grade: 90,
+            studintId: studentNoTest.id
+          }),
+          studentNoTest
+        ]);
+      })
+      .then(([test, student]) => {
+        Student.findById(student.id, { include: { all: true } }).then(
+          foundStudent => {
+            res.json(foundStudent);
+          }
+        );
+      });
+    next();
+  } catch (error) {
+    console.log(error);
+  }
+});
+
 router.put('/:id', function(req, res, next) {
   Student.update(req.body, {
     where: {
-      id: req.params.id,
+      id: req.params.id
     },
-    returning: true,
+    returning: true
   })
     .then(test => res.status(201).json(test[1][0]))
     .catch(next);
@@ -31,8 +57,8 @@ router.put('/:id', function(req, res, next) {
 router.delete('/:id', function(req, res, next) {
   Student.destroy({
     where: {
-      id: req.params.id,
-    },
+      id: req.params.id
+    }
   })
     .then(() => {
       res.sendStatus(204);
